@@ -1,32 +1,26 @@
-import { reactive } from "vue";
-import { io } from 'socket.io-client';
+#!/usr/bin/env node
+import { Logger } from 'sass';
+import { w3cwebsocket } from 'websocket';
 
-export const state = reactive({
-    connected: false,
-    fooEvents: [],
-    barEvents: []
+
+
+var client = new w3cwebsocket('ws://localhost:3000/');
+
+client.
+
+    client.on('connectFailed', function (error) {
+        console.log('Connect Error: ' + error.toString());
+    });
+
+client.onopen(() => {
+    console.log('WebSocket Client Connected');
+})
+
+
+client.onmessage('connect', function (connection) {
+    console.log('WebSocket Client Connected');
 });
 
-// "undefined" means the URL will be computed from the `window.location` object
 
 
-export const socket = io("http://localhost:3000");
-
-socket.on("connect", () => {
-    state.connected = true;
-    console.log("connected");
-});
-
-socket.on("disconnect", () => {
-    state.connected = false;
-    console.log("disconnected");
-
-});
-
-socket.on("foo", (...args) => {
-    state.fooEvents.push(args);
-});
-
-socket.on("bar", (...args) => {
-    state.barEvents.push(args);
-});
+export { client }

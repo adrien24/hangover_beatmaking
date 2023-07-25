@@ -1,20 +1,13 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server, {
-    path: "/socket.io"
-});
+import { WebSocketServer } from 'ws';
 
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
-});
+const wss = new WebSocketServer({ port: 3000 });
 
-io.on('connection', (socket) => {
-    console.log('a user connected');
-});
+wss.on('connection', function connection(ws) {
+    ws.on('error', console.error);
 
-server.listen(3000, () => {
-    console.log('listening on *:3000');
+    ws.on('message', function message(data) {
+        console.log('received: %s', data);
+    });
+
+    ws.send('something');
 });

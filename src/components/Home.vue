@@ -21,7 +21,7 @@
 import AudioPlayer from 'vue3-audio-player'
 import 'vue3-audio-player/dist/style.css'
 import axios from 'axios'
-import { socket } from "/src/socket";
+import { client } from "/src/socket";
 
 
 export default {
@@ -91,6 +91,7 @@ export default {
   },
 
   mounted() {
+    console.log(client)
     let audio = document.querySelectorAll('audio');
     audio.forEach(element => {
       element.volume = 0.1;
@@ -99,7 +100,7 @@ export default {
     //   this.getVolume();
     // }, 500
     // )
-
+    client.connect();
   },
 
   methods: {
@@ -137,12 +138,7 @@ export default {
       }
     },
 
-    connect() {
-      socket.connect();
-    },
-    disconnect() {
-      socket.disconnect();
-    }
+
   }
 }
 

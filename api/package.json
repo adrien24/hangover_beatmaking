@@ -1,11 +1,13 @@
 {
     "name": "socket-chat-example",
     "version": "0.0.1",
+    "type": "module",
     "description": "my first socket.io app",
     "dependencies": {
         "express": "^4.18.2",
         "socket.io": "^4.7.1",
         "socket.io-client": "^4.7.1",
+        "websocket": "^1.0.34",
         "ws": "^8.13.0"
     }
 }
