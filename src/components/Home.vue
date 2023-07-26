@@ -94,6 +94,11 @@ export default {
 
     records() {
       this.record = !this.record;
+
+      if (this.record === false && this.arr.length > 0) {
+        console.log()
+      }
+
       const socket = new WebSocket("ws://172.20.10.3:3000");
       socket.addEventListener("message", (event) => {
         let parse = JSON.parse(event.data);
@@ -101,9 +106,6 @@ export default {
         if (this.record === true && parse.Board) {
           console.log('record')
           this.arr.push(parse);
-        } else if (this.record === false && this.arr.length > 0) {
-          console.log('stop')
-
         }
         console.log(this.arr)
       });
