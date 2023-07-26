@@ -1,26 +1,40 @@
-#!/usr/bin/env node
-import { Logger } from 'sass';
-import { w3cwebsocket } from 'websocket';
+// import { createServer } from 'http';
+// import { WebSocketServer } from 'ws';
 
+// function onSocketError(err) {
+//     console.error(err);
+// }
 
+// const server = createServer();
+// const wss = new WebSocketServer({ noServer: true });
 
-var client = new w3cwebsocket('ws://localhost:3000/');
+// wss.on('connection', function connection(ws, request, client) {
+//     ws.on('error', console.error);
 
-client.
+//     ws.on('message', function message(data) {
+//         console.log(`Received message ${data} from user ${client}`);
+//     });
+// });
 
-    client.on('connectFailed', function (error) {
-        console.log('Connect Error: ' + error.toString());
-    });
+// server.on('upgrade', function upgrade(request, socket, head) {
+//     socket.on('error', onSocketError);
 
-client.onopen(() => {
-    console.log('WebSocket Client Connected');
-})
+//     // This function is not defined on purpose. Implement it with your own logic.
+//     authenticate(request, function next(err, client) {
+//         if (err || !client) {
+//             socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+//             socket.destroy();
+//             return;
+//         }
 
+//         socket.removeListener('error', onSocketError);
 
-client.onmessage('connect', function (connection) {
-    console.log('WebSocket Client Connected');
-});
+//         wss.handleUpgrade(request, socket, head, function done(ws) {
+//             wss.emit('connection', ws, request, client);
+//         });
+//     });
+// });
 
+// server.listen(3000);
 
-
-export { client }
+// export { server }

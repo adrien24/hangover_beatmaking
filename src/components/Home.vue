@@ -2,26 +2,18 @@
 
 <template>
   <div class="home">
-    <button @click="connect()">Connect</button>
-    <button @click="disconnect()">Disconnect</button>
-    <div class="change">
-      <button @click="button">{{ change.change }}</button>
-    </div>
+    <div class="record"><button @click="records()">Record</button></div>
     <div class="beats">
       <div class="for" v-for="items in player" :key="items.number">
-        <AudioPlayer class="player-audio" :option="items" />
+        <AudioPlayer class="player-audio" :id="'player' + items.number" :option="items" />
       </div>
-
     </div>
-
   </div>
 </template>
 
 <script>
 import AudioPlayer from 'vue3-audio-player'
 import 'vue3-audio-player/dist/style.css'
-import axios from 'axios'
-import { client } from "/src/socket";
 
 
 export default {
@@ -32,115 +24,144 @@ export default {
 
   data() {
     return {
-
+      son: 0,
+      record: false,
+      recordArray: [],
       player: [
         {
           number: 1,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/kick.mp3',
           title: 'your-audio-title',
         },
         {
           number: 2,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/punch.mp3',
           title: 'your-audio-title',
         },
         {
           number: 3,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/openHat.mp3',
           title: 'your-audio-title',
         },
         {
           number: 4,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/openHat.mp3',
           title: 'your-audio-title',
         },
         {
           number: 5,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/hitHat.mp3',
           title: 'your-audio-title',
         },
         {
           number: 6,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/hitHat.mp3',
           title: 'your-audio-title',
         },
         {
           number: 7,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/hitHat.mp3',
           title: 'your-audio-title',
         },
         {
           number: 8,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/hitHat.mp3',
           title: 'your-audio-title',
         },
         {
           number: 9,
-          src: '/src/assets/mp3/sasageyo.mp3',
+          src: '/src/assets/mp3/hitHat.mp3',
           title: 'your-audio-title',
         },
       ],
-
-      change: {
-        change: 'Changer les boutons',
-        selecting: false
-      },
-
       selector: "",
+      arr: []
     }
   },
 
+
   mounted() {
-    console.log(client)
+
+    this.receiveData();
+
     let audio = document.querySelectorAll('audio');
     audio.forEach(element => {
       element.volume = 0.1;
     });
-    // setInterval(() => {
-    //   this.getVolume();
-    // }, 500
-    // )
-    client.connect();
   },
 
   methods: {
-    getVolume() {
 
-      axios.get('http://192.168.197.121', {
-        headers: {
-          'Content-Type': 'application/json',
+    records() {
+      this.record = !this.record;
+      const socket = new WebSocket("ws://172.20.10.3:3000");
+      socket.addEventListener("message", (event) => {
+        let parse = JSON.parse(event.data);
+
+        if (this.record === true && parse.Board) {
+          console.log('record')
+          this.arr.push(parse);
+        } else if (this.record === false && this.arr.length > 0) {
+          console.log('stop')
+
         }
-      }).then((res) => {
-        let son = res.data.analog_input / 10;
+        console.log(this.arr)
+      });
 
+    },
+  },
+
+  receiveData() {
+    // Create WebSocket connection.
+    const socket = new WebSocket("ws://172.20.10.3:3000");
+
+    // Connection opened
+    socket.addEventListener("open", (event) => {
+      socket.send("Hello Server!");
+    });
+
+    // Listen for messages
+    socket.addEventListener("message", (event) => {
+      let parse = JSON.parse(event.data);
+
+
+      if (parse.Volume) {
+        this.son = parse.Volume / 10;
         let audio = document.querySelectorAll('audio');
         audio.forEach(element => {
-          element.volume = son
-            ;
+          element.volume = this.son;
         });
-
-      });
-    },
-
-    button() {
-      if (this.change.change == 'Changer les boutons') {
-        this.change.change = 'Valider'
-        this.change.selecting = true
-      } else {
-        this.change.change = 'Changer les boutons'
       }
-    },
 
-    selectSound(numbers) {
-      if (this.change.selecting == true) {
-        this.selector = numbers;
-
+      if (parse.Board) {
+        console.log(parse.Board);
+        let player = document.querySelectorAll('#player' + parse.Board + ' audio');
+        player.forEach(element => {
+          element.currentTime = 0;
+          element.play();
+        });
       }
-    },
+    });
+  },
+
+  button() {
+    if (this.change.change == 'Changer les boutons') {
+      this.change.change = 'Valider'
+      this.change.selecting = true
+    } else {
+      this.change.change = 'Changer les boutons'
+    }
+  },
+
+  selectSound(numbers) {
+    if (this.change.selecting == true) {
+      this.selector = numbers;
+    }
+  },
 
 
-  }
 }
+
 
 </script>
 
