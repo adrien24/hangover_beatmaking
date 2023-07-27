@@ -1,12 +1,13 @@
 <template>
   <div class="home">
-    <div class="record">
-      <button @click="toggleRecord()">{{ isRecording ? "Recording" : "Record" }}</button>
-    </div>
+
     <div class="beats">
       <div class="for" v-for="items in players" :key="items.key">
-        <AudioPlayer class="player-audio" :id="'player' + items.key" :option="items"/>
+        <AudioPlayer class="player-audio" :id="'player' + items.key" :option="items" />
       </div>
+    </div>
+    <div class="record">
+      <button @click="toggleRecord()">{{ isRecording ? "Recording" : "Record" }}</button>
     </div>
   </div>
 </template>
@@ -32,44 +33,53 @@ export default {
         {
           key: "1",
           src: '/src/assets/mp3/kick.mp3',
+          coverImage: '/src/assets/img/kick.png',
         },
         {
           key: "2",
           src: '/src/assets/mp3/punch.mp3',
+          coverImage: '/src/assets/img/kick.png',
         },
         {
           key: "3",
           src: '/src/assets/mp3/openHat.mp3',
+          coverImage: '/src/assets/img/hat.png',
         },
         {
           key: "4",
           src: '/src/assets/mp3/openHat.mp3',
+          coverImage: '/src/assets/img/hat.png',
         },
         {
           key: "5",
           src: '/src/assets/mp3/hitHat.mp3',
+          coverImage: '/src/assets/img/hat.png',
         },
         {
           key: "6",
           src: '/src/assets/mp3/hitHat.mp3',
+          coverImage: '/src/assets/img/hat.png',
         },
         {
           key: "7",
           src: '/src/assets/mp3/hitHat.mp3',
+          coverImage: '/src/assets/img/hat.png',
         },
         {
           key: "8",
           src: '/src/assets/mp3/hitHat.mp3',
+          coverImage: '/src/assets/img/hat.png',
         },
         {
           key: "9",
           src: '/src/assets/mp3/hitHat.mp3',
+          coverImage: '/src/assets/img/hat.png',
         },
       ],
       selector: "",
       arr: [],
-      currentRecord : {
-        startTime : null
+      currentRecord: {
+        startTime: null
       },
       recordsPlayState: {},
       playStartTime: Date.now()
@@ -89,27 +99,29 @@ export default {
     this.playLoops();
 
     window.addEventListener("keyup", (e) => {
-      if(e.key === 'r') this.toggleRecord()
+      if (e.key === 'r') this.toggleRecord()
     })
   },
 
   methods: {
 
-   async loadAudio() {
-     for (const player of this.players) {
-       player.audio = await new Audio(player.src);
-     }
-   },
+    async loadAudio() {
+      for (const player of this.players) {
+        player.audio = await new Audio(player.src);
+      }
+    },
     toggleRecord() {
       this.isRecording = !this.isRecording;
       if (this.isRecording === true) {
         this.currentRecord.startTime = Date.now();
         this.arr = [];
+
+
       } else {
         console.log(this.arr);
         this.loops.push({
-          sounds : this.arr,
-          totalTime : Date.now() - this.currentRecord.startTime
+          sounds: this.arr,
+          totalTime: Date.now() - this.currentRecord.startTime
         })
         console.log(this.loops)
         this.currentRecord.startTime = null;
@@ -117,7 +129,7 @@ export default {
     },
 
     getCurrentRecordTime() {
-      if(this.currentRecord.startTime === null) throw new Error('No record started');
+      if (this.currentRecord.startTime === null) throw new Error('No record started');
       return Date.now() - this.currentRecord.startTime;
     },
 
@@ -126,7 +138,7 @@ export default {
     },
 
     playLoop(loop, index) {
-      if(!this.recordsPlayState[index] || this.recordsPlayState[index].previousLoopTime > loop.totalTime) {
+      if (!this.recordsPlayState[index] || this.recordsPlayState[index].previousLoopTime > loop.totalTime) {
         console.log('reset', index)
         this.recordsPlayState[index] = {
           startTime: Date.now(),
@@ -137,8 +149,8 @@ export default {
       const loopTime = this.getRecordTime(this.recordsPlayState[index].startTime) * this.speed ;
       for (const record of loop.sounds) {
         const i = loop.sounds.indexOf(record);
-        if(i < this.recordsPlayState[index].indexPlayed) continue;
-        if(record.time - loopTime < 10) {
+        if (i < this.recordsPlayState[index].indexPlayed) continue;
+        if (record.time - loopTime < 10) {
           console.log('break', record.time, record.time - loopTime, loopTime)
           this.playSound(record.sound);
           this.recordsPlayState[index].indexPlayed = i + 1;
@@ -199,8 +211,8 @@ export default {
     },
 
     recordSound(sound) {
-      if(this.isRecording) {
-        this.arr.push({sound : sound, time: this.getCurrentRecordTime()});
+      if (this.isRecording) {
+        this.arr.push({ sound: sound, time: this.getCurrentRecordTime() });
         console.log(this.arr)
       }
     },
@@ -227,6 +239,27 @@ export default {
 </script>
 
 <style scoped lang="scss">
+button {
+  background-color: #fff;
+  color: #000;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 15px 45px;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #ff8808;
+    color: #fff;
+    transition: all 0.2s ease-in-out;
+  }
+}
+
+span {
+  color: #ffffff;
+  font-family: 'Roboto', sans-serif;
+}
+
 .home {
   background-color: #1c1c1c;
   height: 100vh;
