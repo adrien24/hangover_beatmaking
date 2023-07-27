@@ -1,11 +1,11 @@
 <template>
   <div class="home">
     <div class="record">
-      <button @click="records()">Record</button>
+      <button @click="toggleRecord()">{{ isRecording ? "Recording" : "Record" }}</button>
     </div>
     <div class="beats">
-      <div class="for" v-for="items in player" :key="items.number">
-        <AudioPlayer class="player-audio" :id="'player' + items.number" :option="items"/>
+      <div class="for" v-for="items in players" :key="items.key">
+        <AudioPlayer class="player-audio" :id="'player' + items.key" :option="items"/>
       </div>
     </div>
   </div>
@@ -25,91 +25,133 @@ export default {
   data() {
     return {
       son: 0,
-      record: false,
-      recordArray: [],
-      player: [
+      isRecording: false,
+      loops: [],
+      players: [
         {
-          number: 1,
+          key: "1",
           src: '/src/assets/mp3/kick.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 2,
+          key: "2",
           src: '/src/assets/mp3/punch.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 3,
+          key: "3",
           src: '/src/assets/mp3/openHat.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 4,
+          key: "4",
           src: '/src/assets/mp3/openHat.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 5,
+          key: "5",
           src: '/src/assets/mp3/hitHat.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 6,
+          key: "6",
           src: '/src/assets/mp3/hitHat.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 7,
+          key: "7",
           src: '/src/assets/mp3/hitHat.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 8,
+          key: "8",
           src: '/src/assets/mp3/hitHat.mp3',
-          title: 'your-audio-title',
         },
         {
-          number: 9,
+          key: "9",
           src: '/src/assets/mp3/hitHat.mp3',
-          title: 'your-audio-title',
         },
       ],
       selector: "",
-      arr: []
+      arr: [],
+      currentRecord : {
+        startTime : null
+      },
+      recordsPlayState: {},
+      playStartTime: Date.now()
     }
   },
 
 
-  mounted() {
-
+  async mounted() {
+    //await this.loadAudio();
     this.receiveData();
 
     let audio = document.querySelectorAll('audio');
     audio.forEach(element => {
       element.volume = 0.1;
     });
+
+    this.playLoops();
+
+    window.addEventListener("keyup", (e) => {
+      if(e.key === 'r') this.toggleRecord()
+    })
   },
 
   methods: {
 
-    records() {
-      this.record = !this.record;
-
-      if (this.record === false && this.arr.length > 0) {
-        console.log()
+   async loadAudio() {
+     for (const player of this.players) {
+       player.audio = await new Audio(player.src);
+     }
+   },
+    toggleRecord() {
+      this.isRecording = !this.isRecording;
+      if (this.isRecording === true) {
+        this.currentRecord.startTime = Date.now();
+        this.arr = [];
+      } else {
+        console.log(this.arr);
+        this.loops.push({
+          sounds : this.arr,
+          totalTime : Date.now() - this.currentRecord.startTime
+        })
+        console.log(this.loops)
+        this.currentRecord.startTime = null;
       }
+    },
 
-      const socket = new WebSocket("ws://172.20.10.3:3000");
-      socket.addEventListener("message", (event) => {
-        let parse = JSON.parse(event.data);
+    getCurrentRecordTime() {
+      if(this.currentRecord.startTime === null) throw new Error('No record started');
+      return Date.now() - this.currentRecord.startTime;
+    },
 
-        if (this.record === true && parse.Board) {
-          console.log('record')
-          this.arr.push(parse);
+    getRecordTime(startTime) {
+      return Date.now() - startTime;
+    },
+
+    playLoop(loop, index) {
+      if(!this.recordsPlayState[index] || this.recordsPlayState[index].previousLoopTime > loop.totalTime) {
+        console.log('reset', index)
+        this.recordsPlayState[index] = {
+          startTime: Date.now(),
+          indexPlayed: 0,
+          previousLoopTime: 0
+        };
+      }
+      const loopTime = this.getRecordTime(this.recordsPlayState[index].startTime);
+      for (const record of loop.sounds) {
+        const i = loop.sounds.indexOf(record);
+        if(i < this.recordsPlayState[index].indexPlayed) continue;
+        if(record.time - loopTime < 10) {
+          console.log('break', record.time, record.time - loopTime, loopTime)
+          this.playSound(record.sound);
+          this.recordsPlayState[index].indexPlayed = i + 1;
         }
-        console.log(this.arr)
-      });
+      }
+      this.recordsPlayState[index].previousLoopTime = loopTime;
+    },
 
+    playLoops() {
+      this.playStartTime = this.getRecordTime(this.playStartTime)
+      this.loops.forEach((loop, index) => {
+        this.playLoop(loop, index);
+      });
+      requestAnimationFrame(this.playLoops.bind(this));
     },
 
     receiveData() {
@@ -118,7 +160,7 @@ export default {
 
       // Connection opened
       socket.addEventListener("open", (event) => {
-        socket.send("Hello Server!");
+        console.log("Connected to server");
       });
 
       // Listen for messages
@@ -127,6 +169,7 @@ export default {
 
 
         if (parse.Volume) {
+          console.log("volume", parse.Volume)
           this.son = parse.Volume / 10;
           let audio = document.querySelectorAll('audio');
           audio.forEach(element => {
@@ -136,13 +179,25 @@ export default {
 
         if (parse.Board) {
           console.log(parse.Board);
-          let player = document.querySelectorAll('#player' + parse.Board + ' audio');
-          player.forEach(element => {
-            element.currentTime = 0;
-            element.play();
-          });
+          this.playSound(parse.Board)
+          this.recordSound(parse.Board);
+
         }
       });
+    },
+
+    playSound(sound) {
+      const player = document.querySelector(`#player${sound} audio`)
+      console.dir(player)
+      player.currentTime = 0;
+      player.play();
+    },
+
+    recordSound(sound) {
+      if(this.isRecording) {
+        this.arr.push({sound : sound, time: this.getCurrentRecordTime()});
+        console.log(this.arr)
+      }
     },
 
     button() {
