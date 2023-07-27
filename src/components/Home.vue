@@ -1,11 +1,11 @@
-
-
 <template>
   <div class="home">
-    <div class="record"><button @click="records()">Record</button></div>
+    <div class="record">
+      <button @click="records()">Record</button>
+    </div>
     <div class="beats">
       <div class="for" v-for="items in player" :key="items.number">
-        <AudioPlayer class="player-audio" :id="'player' + items.number" :option="items" />
+        <AudioPlayer class="player-audio" :id="'player' + items.number" :option="items"/>
       </div>
     </div>
   </div>
@@ -111,56 +111,55 @@ export default {
       });
 
     },
-  },
 
-  receiveData() {
-    // Create WebSocket connection.
-    const socket = new WebSocket("ws://172.20.10.3:3000");
+    receiveData() {
+      // Create WebSocket connection.
+      const socket = new WebSocket("ws://localhost:3000");
 
-    // Connection opened
-    socket.addEventListener("open", (event) => {
-      socket.send("Hello Server!");
-    });
+      // Connection opened
+      socket.addEventListener("open", (event) => {
+        socket.send("Hello Server!");
+      });
 
-    // Listen for messages
-    socket.addEventListener("message", (event) => {
-      let parse = JSON.parse(event.data);
+      // Listen for messages
+      socket.addEventListener("message", (event) => {
+        let parse = JSON.parse(event.data);
 
 
-      if (parse.Volume) {
-        this.son = parse.Volume / 10;
-        let audio = document.querySelectorAll('audio');
-        audio.forEach(element => {
-          element.volume = this.son;
-        });
+        if (parse.Volume) {
+          this.son = parse.Volume / 10;
+          let audio = document.querySelectorAll('audio');
+          audio.forEach(element => {
+            element.volume = this.son;
+          });
+        }
+
+        if (parse.Board) {
+          console.log(parse.Board);
+          let player = document.querySelectorAll('#player' + parse.Board + ' audio');
+          player.forEach(element => {
+            element.currentTime = 0;
+            element.play();
+          });
+        }
+      });
+    },
+
+    button() {
+      if (this.change.change == 'Changer les boutons') {
+        this.change.change = 'Valider'
+        this.change.selecting = true
+      } else {
+        this.change.change = 'Changer les boutons'
       }
+    },
 
-      if (parse.Board) {
-        console.log(parse.Board);
-        let player = document.querySelectorAll('#player' + parse.Board + ' audio');
-        player.forEach(element => {
-          element.currentTime = 0;
-          element.play();
-        });
+    selectSound(numbers) {
+      if (this.change.selecting == true) {
+        this.selector = numbers;
       }
-    });
-  },
-
-  button() {
-    if (this.change.change == 'Changer les boutons') {
-      this.change.change = 'Valider'
-      this.change.selecting = true
-    } else {
-      this.change.change = 'Changer les boutons'
-    }
-  },
-
-  selectSound(numbers) {
-    if (this.change.selecting == true) {
-      this.selector = numbers;
-    }
-  },
-
+    },
+  }
 
 }
 
