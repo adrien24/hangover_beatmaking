@@ -27,6 +27,7 @@ export default {
       son: 0,
       isRecording: false,
       loops: [],
+      speed: 1,
       players: [
         {
           key: "1",
@@ -133,7 +134,7 @@ export default {
           previousLoopTime: 0
         };
       }
-      const loopTime = this.getRecordTime(this.recordsPlayState[index].startTime);
+      const loopTime = this.getRecordTime(this.recordsPlayState[index].startTime) * this.speed ;
       for (const record of loop.sounds) {
         const i = loop.sounds.indexOf(record);
         if(i < this.recordsPlayState[index].indexPlayed) continue;
@@ -182,6 +183,10 @@ export default {
           this.playSound(parse.Board)
           this.recordSound(parse.Board);
 
+        }
+
+        if (parse.Speed) {
+          this.speed = 1 + (parse.Speed / 10) * 4;
         }
       });
     },
