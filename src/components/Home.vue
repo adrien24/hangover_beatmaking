@@ -1,15 +1,12 @@
 <template>
   <div class="home">
-    <div class="record">
-      <button @click="toggleSonar()">{{ isSonar ? "Sonar" : "No sonar" }}</button>
-      <button @click="toggleRecord()">{{ isRecording ? "Recording" : "Record" }}</button>
-    </div>
     <div class="beats">
       <div class="for" v-for="items in players" :key="items.key">
         <AudioPlayer class="player-audio" :id="'player' + items.key" :option="items" />
       </div>
     </div>
     <div class="record">
+      <button @click="toggleSonar()">{{ isSonar ? "Sonar" : "No sonar" }}</button>
       <button @click="toggleRecord()">{{ isRecording ? "Recording" : "Record" }}</button>
     </div>
   </div>
@@ -339,6 +336,11 @@ span {
       }
     }
   }
+}
+
+.record {
+  display: flex;
+  gap: 20px;
 }
 
 .read-the-docs {
