@@ -1,6 +1,9 @@
 <template>
   <div class="home">
-
+    <div class="record">
+      <button @click="toggleSonar()">{{ isSonar ? "Sonar" : "No sonar" }}</button>
+      <button @click="toggleRecord()">{{ isRecording ? "Recording" : "Record" }}</button>
+    </div>
     <div class="beats">
       <div class="for" v-for="items in players" :key="items.key">
         <AudioPlayer class="player-audio" :id="'player' + items.key" :option="items" />
@@ -82,12 +85,23 @@ export default {
         startTime: null
       },
       recordsPlayState: {},
-      playStartTime: Date.now()
+      playStartTime: Date.now(),
+      sonarValue: 0,
+      isSonar: false,
+      audioContext: null,
+      oscillator: null
     }
   },
 
 
   async mounted() {
+    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    this.oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    this.oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    this.oscillator.type = "sine";
+
     //await this.loadAudio();
     this.receiveData();
 
@@ -100,6 +114,7 @@ export default {
 
     window.addEventListener("keyup", (e) => {
       if (e.key === 'r') this.toggleRecord()
+      if (e.key === 's') this.toggleSonar()
     })
   },
 
@@ -126,6 +141,27 @@ export default {
         console.log(this.loops)
         this.currentRecord.startTime = null;
       }
+    },
+
+    toggleSonar() {
+      this.isSonar = !this.isSonar;
+
+      if (!this.isSonar) {
+        this.oscillator.stop()
+        return;
+      }
+
+this.oscillator.start()
+
+
+      // const now = this.audioContext.currentTime;
+      // gainNode.gain.setValueAtTime(10, now);
+      // gainNode.gain.exponentialRampToValueAtTime(0.11, now + 2);
+      // oscillator.start(now);
+      // oscillator.stop(now + 2);
+      //
+      // oscillator.type = "triangle";
+
     },
 
     getCurrentRecordTime() {
@@ -160,6 +196,8 @@ export default {
     },
 
     playLoops() {
+      if(this.oscillator) this.oscillator.frequency.value = Math.min(1000, this.sonarValue * 10);
+      console.log(this.oscillator.frequency.value)
       this.playStartTime = this.getRecordTime(this.playStartTime)
       this.loops.forEach((loop, index) => {
         this.playLoop(loop, index);
@@ -194,7 +232,10 @@ export default {
           console.log(parse.Board);
           this.playSound(parse.Board)
           this.recordSound(parse.Board);
+        }
 
+        if (parse.Sonar) {
+          this.sonarValue = parse.Sonar
         }
 
         if (parse.Speed) {
